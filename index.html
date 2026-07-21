@@ -1,390 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>javsql - FANZA/DMM アダルト動画検索・紹介</title>
-    <!-- Tailwind CSS for modern, responsive layout -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* Custom scrollbar and smooth transitions */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #1f2937;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #4b5563;
-        border-radius: 4px;
-      }
-    </style>
-  </head>
-  <body
-    class="bg-gray-950 text-gray-100 font-sans min-height-screen flex flex-col"
-  >
-    <!-- AGE GATE MODAL (18禁年龄限制弹窗) -->
-    <div
-      id="age-gate"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950 px-4"
-    >
-      <div
-        class="bg-gray-900 border border-red-600 rounded-lg max-w-lg w-full p-8 text-center shadow-2xl"
-      >
-        <div class="text-red-500 text-6xl mb-4">🔞</div>
-        <h1 class="text-2xl font-bold text-red-500 mb-2">
-          【18禁】年齢確認のご協力
-        </h1>
-        <p class="text-gray-300 text-sm mb-6 leading-relaxed">
-          これより先は、アダルト商品、情報など成年向けコンテンツを掲載しております。<br />
-          18歳未満の方、および成年向けコンテンツの閲覧が禁止されている地域にお住まいの方のアクセスは固くお断りいたします。
-        </p>
-        <div
-          class="text-left bg-gray-950 p-4 rounded mb-6 border border-gray-800 text-xs text-gray-400"
-        >
-          <p class="font-bold mb-1">【ご注意】</p>
-          <ul>
-            <li>・あなたは18歳以上ですか？</li>
-            <li>
-              ・本サイトは DMM.com / FANZA
-              サービス等のアフィリエイト広告を含みます。
-            </li>
-          </ul>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onclick="acceptAgeGate()"
-            class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded transition duration-200 order-1 sm:order-2"
-          >
-            はい、18歳以上です
-          </button>
-          <button
-            onclick="rejectAgeGate()"
-            class="bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 px-8 rounded transition duration-200 order-2 sm:order-1"
-          >
-            いいえ、退場します
-          </button>
-        </div>
-      </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="javsql — DMM作品をデータで読み解く、成人向けコンテンツ分析メディア。" />
+  <title>javsql — DMM作品分析メディア</title>
+  <style>
+    :root { --bg:#0a0c10; --panel:#12161d; --panel2:#171c24; --line:#2a313c; --text:#f3f5f7; --muted:#98a2b3; --accent:#ff5f67; --accent2:#ffa454; --green:#80d8b0; --shadow:0 24px 70px rgba(0,0,0,.32); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--text); background:var(--bg); font-family:Inter, -apple-system, BlinkMacSystemFont, "Noto Sans JP", "Hiragino Sans", sans-serif; line-height:1.7; }
+    a { color:inherit; text-decoration:none; }
+    button, input, select { font:inherit; }
+    .shell { width:min(1160px, calc(100% - 40px)); margin:auto; }
+    header { position:sticky; top:0; z-index:10; background:rgba(10,12,16,.82); backdrop-filter:blur(18px); border-bottom:1px solid rgba(255,255,255,.06); }
+    .nav { height:74px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+    .brand { display:flex; align-items:center; gap:11px; font-weight:800; letter-spacing:-.04em; font-size:23px; }
+    .mark { width:31px; height:31px; display:grid; place-items:center; border-radius:10px; color:#120d0d; background:linear-gradient(135deg,var(--accent),var(--accent2)); font-size:15px; }
+    nav { display:flex; gap:26px; color:var(--muted); font-size:14px; }
+    nav a:hover { color:var(--text); }
+    .nav-cta, .btn { border:0; border-radius:999px; padding:10px 17px; cursor:pointer; font-weight:700; color:#160d0d; background:var(--accent); transition:.2s; }
+    .nav-cta:hover, .btn:hover { transform:translateY(-2px); filter:brightness(1.08); }
+    .hero { min-height:670px; display:grid; grid-template-columns:1.08fr .92fr; align-items:center; gap:70px; padding:90px 0 76px; position:relative; overflow:hidden; }
+    .hero:before { content:""; position:absolute; width:620px; height:620px; border-radius:50%; right:-150px; top:40px; background:radial-gradient(circle, rgba(255,95,103,.19), transparent 67%); pointer-events:none; }
+    .eyebrow { color:var(--accent2); text-transform:uppercase; letter-spacing:.16em; font-size:11px; font-weight:800; }
+    h1 { font-size:clamp(44px, 7vw, 78px); line-height:1.05; letter-spacing:-.075em; margin:17px 0 24px; max-width:720px; }
+    h1 em { color:var(--accent); font-style:normal; }
+    .lead { color:#bdc4ce; max-width:570px; font-size:17px; }
+    .hero-actions { display:flex; align-items:center; gap:17px; margin-top:32px; flex-wrap:wrap; }
+    .btn.secondary { color:var(--text); background:transparent; border:1px solid var(--line); }
+    .mini-note { color:var(--muted); font-size:12px; margin-top:17px; }
+    .dashboard { position:relative; background:linear-gradient(145deg,#171c25,#0f1218); border:1px solid #303745; border-radius:24px; padding:22px; box-shadow:var(--shadow); transform:rotate(2deg); }
+    .dash-top { display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:25px; }
+    .live { display:inline-flex; align-items:center; gap:6px; color:var(--green); }
+    .live:before { content:""; width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 14px var(--green); }
+    .score { display:flex; align-items:end; gap:12px; border-bottom:1px solid var(--line); padding-bottom:22px; }
+    .score strong { font-size:53px; line-height:1; letter-spacing:-.06em; }
+    .score span { color:var(--accent); font-size:13px; padding-bottom:6px; }
+    .bars { display:flex; align-items:end; gap:10px; height:155px; padding:28px 0 11px; border-bottom:1px solid var(--line); }
+    .bar { flex:1; border-radius:7px 7px 2px 2px; background:linear-gradient(180deg,var(--accent),#6b283d); position:relative; }
+    .bar:nth-child(even) { background:linear-gradient(180deg,var(--accent2),#6a3731); }
+    .bar small { position:absolute; top:calc(100% + 8px); width:100%; text-align:center; color:var(--muted); font-size:10px; }
+    .dash-rows { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding-top:18px; }
+    .dash-rows div { color:var(--muted); font-size:11px; } .dash-rows b { display:block; color:var(--text); font-size:14px; }
+    section { padding:84px 0; border-top:1px solid rgba(255,255,255,.06); }
+    .section-head { display:flex; justify-content:space-between; align-items:end; gap:30px; margin-bottom:30px; }
+    h2 { font-size:34px; line-height:1.15; letter-spacing:-.055em; margin:8px 0 0; }
+    .section-head p { color:var(--muted); max-width:420px; font-size:14px; margin:0; }
+    .feature-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; }
+    .card { padding:25px; border:1px solid var(--line); background:var(--panel); border-radius:18px; }
+    .icon { width:42px; height:42px; display:grid; place-items:center; border-radius:13px; color:var(--accent2); background:rgba(255,164,84,.12); margin-bottom:20px; font-size:20px; }
+    .card h3 { margin:0 0 8px; font-size:18px; } .card p { margin:0; color:var(--muted); font-size:14px; }
+    .explore { display:grid; grid-template-columns:1.35fr .65fr; gap:18px; }
+    .panel { border:1px solid var(--line); border-radius:20px; background:var(--panel); padding:25px; }
+    .filters { display:flex; gap:10px; margin:24px 0; flex-wrap:wrap; }
+    select, input { background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 12px; outline:none; }
+    input { min-width:210px; } select:focus, input:focus { border-color:var(--accent); }
+    .table { width:100%; border-collapse:collapse; font-size:13px; } .table th { text-align:left; color:var(--muted); font-weight:500; padding:10px 8px; border-bottom:1px solid var(--line); } .table td { padding:15px 8px; border-bottom:1px solid rgba(255,255,255,.06); } .table tr:last-child td { border-bottom:0; }
+    .title-cell { display:flex; align-items:center; gap:10px; } .thumb { width:35px; height:35px; border-radius:9px; display:grid; place-items:center; color:#fff; font-size:11px; font-weight:800; background:linear-gradient(135deg,#683c5b,#df6f62); } .thumb.two { background:linear-gradient(135deg,#294f66,#5dc3ab); } .thumb.three { background:linear-gradient(135deg,#43316e,#d49856); }
+    .tag { display:inline-block; border-radius:999px; padding:3px 8px; color:var(--green); background:rgba(128,216,176,.1); font-size:11px; }
+    .signal { display:flex; justify-content:space-between; align-items:center; margin:16px 0; font-size:13px; } .track { width:100px; height:6px; overflow:hidden; border-radius:999px; background:#272d38; } .fill { height:100%; width:78%; background:var(--accent); border-radius:inherit; } .fill.orange { width:64%; background:var(--accent2); } .fill.green { width:88%; background:var(--green); }
+    .quote { margin-top:25px; padding:20px; border-left:2px solid var(--accent); background:rgba(255,95,103,.06); color:#d8dce3; font-size:14px; }
+    .compliance { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:stretch; } .compliance .card { display:flex; gap:18px; align-items:flex-start; } .check { color:var(--green); font-size:22px; } .compliance h3 { margin:0 0 6px; font-size:16px; } .compliance p { margin:0; font-size:13px; color:var(--muted); }
+    footer { border-top:1px solid var(--line); padding:28px 0 40px; color:var(--muted); font-size:12px; } .footer-row { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; } .footer-row strong { color:var(--text); }
+    .age-gate { position:fixed; inset:0; display:grid; place-items:center; z-index:30; background:rgba(4,5,7,.82); backdrop-filter:blur(14px); } .age-box { width:min(440px,calc(100% - 36px)); padding:34px; text-align:center; border:1px solid var(--line); border-radius:24px; background:#151922; box-shadow:var(--shadow); } .age-box h2 { font-size:27px; margin:15px 0 8px; } .age-box p { color:var(--muted); font-size:13px; } .age-actions { display:flex; gap:10px; justify-content:center; margin-top:24px; } .age-actions .btn { min-width:120px; } .age-actions .btn.no { color:var(--text); background:transparent; border:1px solid var(--line); }
+    @media (max-width: 800px) { .hero { grid-template-columns:1fr; gap:45px; padding-top:65px; } .dashboard { transform:none; max-width:560px; } nav { display:none; } .feature-grid, .explore, .compliance { grid-template-columns:1fr; } .section-head { display:block; } .section-head p { margin-top:15px; } }
+    @media (max-width: 500px) { .shell { width:min(100% - 28px,1160px); } .hero { min-height:auto; } h1 { font-size:49px; } section { padding:60px 0; } .panel { padding:17px; overflow:auto; } .table { min-width:470px; } }
+  </style>
+</head>
+<body>
+  <div class="age-gate" id="ageGate" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
+    <div class="age-box">
+      <div class="mark" style="margin:auto">J</div>
+      <h2 id="ageTitle">年齢確認</h2>
+      <p>このサイトは成人向け作品の情報・分析を扱います。18歳未満の方は閲覧できません。あなたは18歳以上ですか？</p>
+      <div class="age-actions"><button class="btn" id="enterBtn">はい、18歳以上です</button><button class="btn no" id="leaveBtn">いいえ</button></div>
+      <div class="mini-note">※ javsql はDMM.comとは無関係の独立した分析メディアです。</div>
     </div>
-
-    <!-- HEADER -->
-    <header class="border-b border-gray-800 bg-gray-900 sticky top-0 z-40">
-      <div
-        class="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4"
-      >
-        <!-- Brand Logo -->
-        <div class="flex items-center gap-3">
-          <span class="text-2xl font-black tracking-wider text-red-500"
-            >jav<span class="text-white bg-red-600 px-1.5 py-0.5 rounded ml-1"
-              >SQL</span
-            ></span
-          >
-          <span
-            class="text-xs text-gray-400 border border-gray-700 px-1.5 py-0.5 rounded"
-            >R18</span
-          >
-        </div>
-
-        <!-- Search Bar (Simulated) -->
-        <div class="w-full md:max-w-md relative">
-          <input
-            type="text"
-            placeholder="女優、メーカー、作品名で検索..."
-            class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-red-500 text-sm"
-          />
-          <button
-            class="absolute right-3 top-2.5 text-gray-400 hover:text-red-500"
-          >
-            🔍
-          </button>
-        </div>
-
-        <!-- Navigation Links -->
-        <nav class="flex gap-6 text-sm text-gray-300">
-          <a href="#" class="hover:text-red-500 transition">ホーム</a>
-          <a href="#" class="hover:text-red-500 transition">人気女優</a>
-          <a href="#" class="hover:text-red-500 transition">新作動画</a>
-          <a href="#" class="hover:text-red-500 transition">カテゴリ</a>
-        </nav>
-      </div>
-    </header>
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-grow container mx-auto px-4 py-8">
-      <!-- Banner / Disclaimer Notice -->
-      <div
-        class="bg-gradient-to-r from-red-950 to-gray-900 border border-red-900/50 rounded-lg p-6 mb-8"
-      >
-        <h2 class="text-xl font-bold text-red-400 mb-2">
-          🔥 DMM / FANZA 公式 API 連携サイト
-        </h2>
-        <p class="text-sm text-gray-300 leading-relaxed">
-          本サイト（javsql）は、DMMアフィリエイトプログラムに基づいてFANZAの公式アダルト動画商品を紹介しています。直接の動画配信や違法な無断アップロードファイルは一切取り扱っておりません。
-        </p>
-      </div>
-
-      <!-- Section Title -->
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-lg font-bold border-l-4 border-red-500 pl-3">
-          本日のおすすめ作品 (DMM API プレースホルダー)
-        </h3>
-        <span class="text-xs text-gray-500">※表示データはデモです</span>
-      </div>
-
-      <!-- Product Grid (DMM Style Placeholder cards) -->
-      <div
-        class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
-      >
-        <!-- Loop of 5 Placeholder Items -->
-        <!-- Card 1 -->
-        <div
-          class="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-red-500/50 transition duration-200 flex flex-col"
-        >
-          <div
-            class="aspect-[3/4] bg-gray-800 relative flex items-center justify-center text-gray-600 font-bold text-xs"
-          >
-            [ 画像プレースホルダー / JPG ]
-          </div>
-          <div class="p-3 flex-grow flex flex-col">
-            <span
-              class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1"
-              >独占配信</span
-            >
-            <h4
-              class="text-xs font-bold text-gray-200 line-clamp-2 mb-2 hover:text-red-400 cursor-pointer"
-            >
-              【FANZA】厳選女優の極上プライベート映像 120分完全限定版
-            </h4>
-            <p class="text-[11px] text-gray-400 mt-auto">
-              女優: <span class="text-gray-300">美波ありさ</span>
-            </p>
-            <p class="text-[11px] text-gray-400">配信日: 2026/07/17</p>
-            <a
-              href="https://www.dmm.co.jp/digital/videoa/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-3 block text-center bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded transition"
-            >
-              DMM/FANZAで詳細を見る
-            </a>
-          </div>
-        </div>
-
-        <!-- Card 2 -->
-        <div
-          class="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-red-500/50 transition duration-200 flex flex-col"
-        >
-          <div
-            class="aspect-[3/4] bg-gray-800 relative flex items-center justify-center text-gray-600 font-bold text-xs"
-          >
-            [ 画像プレースホルダー / JPG ]
-          </div>
-          <div class="p-3 flex-grow flex flex-col">
-            <span
-              class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1"
-              >VR専用作品</span
-            >
-            <h4
-              class="text-xs font-bold text-gray-200 line-clamp-2 mb-2 hover:text-red-400 cursor-pointer"
-            >
-              【VR】本当に目の前にいるような距離感で体験する至高のシチュエーション
-            </h4>
-            <p class="text-[11px] text-gray-400 mt-auto">
-              女優: <span class="text-gray-300">羽咲みはる</span>
-            </p>
-            <p class="text-[11px] text-gray-400">配信日: 2026/07/15</p>
-            <a
-              href="https://www.dmm.co.jp/digital/videoa/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-3 block text-center bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded transition"
-            >
-              DMM/FANZAで詳細を見る
-            </a>
-          </div>
-        </div>
-
-        <!-- Card 3 -->
-        <div
-          class="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-red-500/50 transition duration-200 flex flex-col"
-        >
-          <div
-            class="aspect-[3/4] bg-gray-800 relative flex items-center justify-center text-gray-600 font-bold text-xs"
-          >
-            [ 画像プレースホルダー / JPG ]
-          </div>
-          <div class="p-3 flex-grow flex flex-col">
-            <span
-              class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1"
-              >ハイライト作</span
-            >
-            <h4
-              class="text-xs font-bold text-gray-200 line-clamp-2 mb-2 hover:text-red-400 cursor-pointer"
-            >
-              ハイレゾ音源で楽しむ極上の囁きと日常系癒やしボイス
-            </h4>
-            <p class="text-[11px] text-gray-400 mt-auto">
-              女優: <span class="text-gray-300">新人モデルA</span>
-            </p>
-            <p class="text-[11px] text-gray-400">配信日: 2026/07/10</p>
-            <a
-              href="https://www.dmm.co.jp/digital/videoa/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-3 block text-center bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded transition"
-            >
-              DMM/FANZAで詳細を見る
-            </a>
-          </div>
-        </div>
-
-        <!-- Card 4 -->
-        <div
-          class="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-red-500/50 transition duration-200 flex flex-col"
-        >
-          <div
-            class="aspect-[3/4] bg-gray-800 relative flex items-center justify-center text-gray-600 font-bold text-xs"
-          >
-            [ 画像プレースホルダー / JPG ]
-          </div>
-          <div class="p-3 flex-grow flex flex-col">
-            <span
-              class="text-[10px] text-yellow-500 font-bold uppercase tracking-wider mb-1"
-              >ベストセラー</span
-            >
-            <h4
-              class="text-xs font-bold text-gray-200 line-clamp-2 mb-2 hover:text-red-400 cursor-pointer"
-            >
-              【素人系】素人お姉さんと過ごす甘々な一泊二日温泉旅行密着ドキュメント
-            </h4>
-            <p class="text-[11px] text-gray-400 mt-auto">
-              女優: <span class="text-gray-300">素人さん</span>
-            </p>
-            <p class="text-[11px] text-gray-400">配信日: 2026/07/08</p>
-            <a
-              href="https://www.dmm.co.jp/digital/videoa/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-3 block text-center bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded transition"
-            >
-              DMM/FANZAで詳細を見る
-            </a>
-          </div>
-        </div>
-
-        <!-- Card 5 -->
-        <div
-          class="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-red-500/50 transition duration-200 flex flex-col"
-        >
-          <div
-            class="aspect-[3/4] bg-gray-800 relative flex items-center justify-center text-gray-600 font-bold text-xs"
-          >
-            [ 画像プレースホルダー / JPG ]
-          </div>
-          <div class="p-3 flex-grow flex flex-col">
-            <span
-              class="text-[10px] text-red-500 font-bold uppercase tracking-wider mb-1"
-              >新作入荷</span
-            >
-            <h4
-              class="text-xs font-bold text-gray-200 line-clamp-2 mb-2 hover:text-red-400 cursor-pointer"
-            >
-              【100人斬り】夏休み特別企画！南の島で繰り広げられる常夏ビーチフェスティバル
-            </h4>
-            <p class="text-[11px] text-gray-400 mt-auto">
-              女優: <span class="text-gray-300">複数キャスト</span>
-            </p>
-            <p class="text-[11px] text-gray-400">配信日: 2026/07/05</p>
-            <a
-              href="https://www.dmm.co.jp/digital/videoa/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="mt-3 block text-center bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded transition"
-            >
-              DMM/FANZAで詳細を見る
-            </a>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- FOOTER -->
-    <footer
-      class="bg-gray-900 border-t border-gray-800 text-gray-400 text-xs py-8 mt-12"
-    >
-      <div class="container mx-auto px-4">
-        <div
-          class="flex flex-col md:flex-row justify-between items-center gap-6 mb-6"
-        >
-          <!-- Branding Footer -->
-          <div>
-            <span class="text-lg font-black text-red-500"
-              >jav<span class="text-white bg-red-600 px-1 py-0.5 rounded ml-0.5"
-                >SQL</span
-              ></span
-            >
-            <p class="text-gray-500 mt-1">
-              © 2026 javsql. All Rights Reserved.
-            </p>
-          </div>
-          <!-- Important Footer Links for Reviewers -->
-          <div
-            class="flex flex-wrap gap-x-6 gap-y-2 justify-center text-gray-400"
-          >
-            <a href="#" class="hover:text-red-500 transition"
-              >お問い合わせ (Contact)</a
-            >
-            <a href="#" class="hover:text-red-500 transition"
-              >プライバシーポリシー (Privacy Policy)</a
-            >
-            <a href="#" class="hover:text-red-500 transition"
-              >免責事項 (Disclaimer)</a
-            >
-          </div>
-        </div>
-
-        <hr class="border-gray-800 my-6" />
-
-        <!-- DMM Required Affiliate Notice / Warning Details -->
-        <div class="space-y-3 text-gray-500 leading-relaxed text-[11px]">
-          <p>
-            <strong>【免責事項・アフィリエイト広告について】</strong><br />
-            当サイト「javsql」は、DMMアフィリエイトプログラム、および各種成年向け広告配信サービスに参加しています。本ウェブサイトで紹介している動画、画像、テキストの著作権および肖像権は、各製作者、販売元、およびDMM.com
-            /
-            FANZA等に帰属します。当サイトはアフィリエイトバナー等の紹介用URLを提供するものであり、サイト内での違法動画の保存・ストリーミング・アップロード行為は一切行っておりません。
-          </p>
-          <p>
-            当サイトのコンテンツの利用に関連して発生したいかなるトラブルや損失についても、当サイトは一切の責任を負いかねます。ご購入や会員登録に関するお問い合わせは、直接販売元のサポート窓口（DMM.com）へお問い合わせください。
-          </p>
-          <p class="text-center text-red-700/80 font-bold text-xs pt-4">
-            ※本サイトは18歳未満の方の閲覧、利用を固く禁じております。
-          </p>
-        </div>
-      </div>
-    </footer>
-
-    <!-- AGE GATE LOGIC (JavaScript) -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        // Check if user has already passed the age gate in this session
-        const isAdult = localStorage.getItem("javsql_adult_verified");
-        const ageGate = document.getElementById("age-gate");
-
-        if (isAdult === "true") {
-          ageGate.classList.add("hidden");
-        }
-      });
-
-      function acceptAgeGate() {
-        localStorage.setItem("javsql_adult_verified", "true");
-        document.getElementById("age-gate").classList.add("hidden");
-      }
-
-      function rejectAgeGate() {
-        // Redirect underage users to Yahoo Kids or Google JP
-        window.location.href = "https://www.yahoo.co.jp/";
-      }
-    </script>
-  </body>
+  </div>
+  <header><div class="shell nav"><a class="brand" href="#top"><span class="mark">J</span>javsql</a><nav><a href="#about">About</a><a href="#analysis">分析ダッシュボード</a><a href="#policy">ポリシー</a></nav><a class="nav-cta" href="#analysis">分析を見る</a></div></header>
+  <main id="top">
+    <div class="shell hero">
+      <div><div class="eyebrow">adult content intelligence · japan</div><h1>作品選びを、<em>もっとスマート</em>に。</h1><p class="lead">javsqlは、DMM作品の公開情報をもとに、ジャンル・評価・トレンドを中立的に読み解く分析メディアです。迷わず、安心して、自分に合う作品へ。</p><div class="hero-actions"><a class="btn" href="#analysis">データを探索する →</a><a class="btn secondary" href="#about">javsqlについて</a></div><div class="mini-note">18+　｜　日本語対応　｜　公式ページへのリンクのみ掲載</div></div>
+      <div class="dashboard"><div class="dash-top"><span>WEEKLY PULSE / DEMO</span><span class="live">SAMPLE DATA</span></div><div class="score"><strong>8.4</strong><span>平均満足度　↗ 12.6%</span></div><div class="bars"><div class="bar" style="height:48%"><small>月</small></div><div class="bar" style="height:63%"><small>火</small></div><div class="bar" style="height:56%"><small>水</small></div><div class="bar" style="height:78%"><small>木</small></div><div class="bar" style="height:68%"><small>金</small></div><div class="bar" style="height:91%"><small>土</small></div><div class="bar" style="height:72%"><small>日</small></div></div><div class="dash-rows"><div>注目ジャンル<b>ストーリー重視</b></div><div>レビュー更新<b>2,480件</b></div></div></div>
+    </div>
+    <section id="about"><div class="shell"><div class="section-head"><div><div class="eyebrow">WHY JAVSQL</div><h2>データを、読みやすく。</h2></div><p>刺激的なランキングだけではなく、公開データの背景まで整理。作品とユーザーをつなぐ、落ち着いたリサーチ体験を目指します。</p></div><div class="feature-grid"><article class="card"><div class="icon">◒</div><h3>傾向を可視化</h3><p>ジャンルやレビューの推移を、短時間で把握できるインサイトに変換します。</p></article><article class="card"><div class="icon">↗</div><h3>発見をサポート</h3><p>気分・テーマ・作品傾向から、次に見る作品を探すための視点を提供します。</p></article><article class="card"><div class="icon">♢</div><h3>安心を優先</h3><p>年齢確認、外部リンクの明示、権利とプライバシーへの配慮を基本に運営します。</p></article></div></div></section>
+    <section id="analysis"><div class="shell"><div class="section-head"><div><div class="eyebrow">EXPLORE THE SIGNAL</div><h2>今週の作品インサイト</h2></div><p>サンプルデータによるデモ画面です。実運用では、利用規約と権利関係を確認した公開情報のみ扱います。</p></div><div class="explore"><div class="panel"><div class="filters"><input id="search" type="search" placeholder="作品名・キーワードで検索" aria-label="作品検索"><select id="genre" aria-label="ジャンル選択"><option value="all">すべてのジャンル</option><option value="story">ストーリー</option><option value="real">リアル系</option><option value="classic">定番</option></select></div><table class="table"><thead><tr><th>作品</th><th>傾向</th><th>評価</th><th>更新</th></tr></thead><tbody id="workRows"><tr data-genre="story" data-name="ストーリー"><td><div class="title-cell"><span class="thumb">01</span><span>Story Signal <small style="display:block;color:var(--muted)">作品分析レポート</small></span></div></td><td><span class="tag">物語性</span></td><td>8.9</td><td>今日</td></tr><tr data-genre="real" data-name="リアルドキュメント"><td><div class="title-cell"><span class="thumb two">02</span><span>Real Document <small style="display:block;color:var(--muted)">視聴傾向データ</small></span></div></td><td><span class="tag">リアル系</span></td><td>8.6</td><td>昨日</td></tr><tr data-genre="classic" data-name="クラシック"><td><div class="title-cell"><span class="thumb three">03</span><span>Classic Index <small style="display:block;color:var(--muted)">定番作品研究</small></span></div></td><td><span class="tag">定番</span></td><td>8.2</td><td>06.18</td></tr></tbody></table></div><aside class="panel"><div class="eyebrow">AUDIENCE SIGNAL</div><h3 style="font-size:22px;margin:8px 0 22px">視聴者の関心</h3><div class="signal"><span>ストーリー性</span><div class="track"><div class="fill"></div></div><b>78%</b></div><div class="signal"><span>高画質</span><div class="track"><div class="fill orange"></div></div><b>64%</b></div><div class="signal"><span>レビュー信頼度</span><div class="track"><div class="fill green"></div></div><b>88%</b></div><div class="quote">「選びやすさ」と「わかりやすい根拠」を、ひとつの画面に。</div></aside></div></div></section>
+    <section id="policy"><div class="shell"><div class="section-head"><div><div class="eyebrow">SAFE BY DESIGN</div><h2>運営ポリシー</h2></div><p>成人向け領域だからこそ、見せ方と扱う情報に明確な線引きを設けています。</p></div><div class="compliance"><div class="card"><span class="check">✓</span><div><h3>18歳未満の閲覧を防止</h3><p>年齢確認を入口に設置。地域の法令・プラットフォーム規則に合わせて運用します。</p></div></div><div class="card"><span class="check">✓</span><div><h3>APIデータを正しく表示</h3><p>作品名・価格・画像・販売状態などは、許可されたAPIレスポンスと表示ルールに従い、取得日時を管理します。</p></div></div><div class="card"><span class="check">✓</span><div><h3>公式情報を尊重</h3><p>DMM.comと提携・所属しているように誤認させず、広告・アフィリエイトであることを明示します。</p></div></div><div class="card"><span class="check">✓</span><div><h3>露骨な素材を転載しない</h3><p>APIで許可された素材のみを表示し、無断保存・再配布・過度な加工を行いません。</p></div></div><div class="card"><span class="check">✓</span><div><h3>キャッシュと削除依頼に対応</h3><p>API規約に沿った保存期間を設定し、販売停止・権利者からの連絡に応じて掲載を見直します。</p></div></div><div class="card"><span class="check">✓</span><div><h3>審査前の注意</h3><p>本ページはUIデモです。実運用にはDMMのアフィリエイト登録、APIキー、個別審査、最新規約の確認が必要です。</p></div></div></div></div></section>
+  </main>
+  <footer><div class="shell footer-row"><div><strong>javsql</strong>　DMM作品分析メディア　<span class="tag">広告 / アフィリエイト</span></div><div>© 2026 javsql　｜　利用規約　｜　プライバシー　｜　お問い合わせ</div></div></footer>
+  <script>
+    const gate = document.getElementById('ageGate');
+    document.getElementById('enterBtn').addEventListener('click', () => { sessionStorage.setItem('javsql-age-ok','1'); gate.remove(); });
+    document.getElementById('leaveBtn').addEventListener('click', () => { document.querySelector('.age-box').innerHTML = '<h2>ご利用いただけません</h2><p>18歳未満の方はこのサイトを閲覧できません。ブラウザを閉じてください。</p>'; });
+    if (sessionStorage.getItem('javsql-age-ok') === '1') gate.remove();
+    const search = document.getElementById('search'), genre = document.getElementById('genre');
+    function filterRows(){ const q=search.value.trim().toLowerCase(), g=genre.value; document.querySelectorAll('#workRows tr').forEach(row => { row.hidden = (g !== 'all' && row.dataset.genre !== g) || (q && !row.dataset.name.toLowerCase().includes(q)); }); }
+    search.addEventListener('input',filterRows); genre.addEventListener('change',filterRows);
+  </script>
+</body>
 </html>
